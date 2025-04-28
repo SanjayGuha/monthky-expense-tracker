@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/monthky-expense-tracker/static/css/main.c5e7f991.css",
-    "main.js": "/monthky-expense-tracker/static/js/main.7b66a5de.js",
-    "index.html": "/monthky-expense-tracker/index.html",
-    "main.c5e7f991.css.map": "/monthky-expense-tracker/static/css/main.c5e7f991.css.map",
-    "main.7b66a5de.js.map": "/monthky-expense-tracker/static/js/main.7b66a5de.js.map"
+    "main.css": "/static/css/main.c5e7f991.css",
+    "main.js": "/static/js/main.93efd536.js",
+    "index.html": "/index.html",
+    "main.c5e7f991.css.map": "/static/css/main.c5e7f991.css.map",
+    "main.93efd536.js.map": "/static/js/main.93efd536.js.map"
   },
   "entrypoints": [
     "static/css/main.c5e7f991.css",
-    "static/js/main.7b66a5de.js"
+    "static/js/main.93efd536.js"
   ]
 }
