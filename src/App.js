@@ -25,6 +25,37 @@ ChartJS.register(
   Legend
 );
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-boundary">
+          <h2>Something went wrong.</h2>
+          <p>{this.state.error?.message}</p>
+          <Button variant="primary" onClick={() => window.location.reload()}>
+            Reload Page
+          </Button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 // Define categories at the top level
 const categories = [
   'Rent',
@@ -68,7 +99,8 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem('expenseFolders', JSON.stringify(folders));
-  }, [folders]);
+    updateAllExpenses(folders);
+  }, [folders, updateAllExpenses]);
 
   const updateAllExpenses = useCallback((folders) => {
     const expenses = folders.reduce((acc, folder) => {
@@ -121,172 +153,166 @@ function App() {
   }, []);
 
   return (
-    <div className="App">
-      <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
-        <Container>
-          <Navbar.Brand href="#home">Monthly Expense Tracker</Navbar.Brand>
-          <div className="d-flex">
-            <Button variant="outline-light" className="me-2" onClick={generateShareLink}>
-              Share
-            </Button>
-            <Button variant="outline-light" onClick={exportToExcel}>
-              Export to Excel
-            </Button>
+    <ErrorBoundary>
+      <div className="App">
+        <Navbar bg="dark" variant="dark" expand="lg" className="mb-4">
+          <Container>
+            <Navbar.Brand href="#home">Monthly Expense Tracker</Navbar.Brand>
+            <div className="d-flex">
+              <Button variant="outline-light" className="me-2" onClick={generateShareLink}>
+                Share
+              </Button>
+              <Button variant="outline-light" onClick={exportToExcel}>
+                Export to Excel
+              </Button>
+            </div>
+          </Container>
+        </Navbar>
+
+        {showAlert && (
+          <Alert variant="success" className="alert-custom" onClose={() => setShowAlert(false)} dismissible>
+            Link copied to clipboard!
+          </Alert>
+        )}
+
+        <Modal show={showShareModal} onHide={() => setShowShareModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Share Expense Tracker</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p>Share this link with your friend to collaborate on expenses:</p>
+            <div className="share-link-container">
+              <input 
+                type="text" 
+                value={shareLink} 
+                readOnly 
+                className="form-control mb-2"
+              />
+              <Button variant="primary" onClick={copyToClipboard}>
+                Copy Link
+              </Button>
+            </div>
+          </Modal.Body>
+        </Modal>
+
+        <div className="main-layout">
+          <div className="side-panel">
+            <Nav className="flex-column">
+              <Nav.Link 
+                active={activeView === 'home'} 
+                onClick={() => setActiveView('home')}
+                className="side-panel-item"
+              >
+                Home
+              </Nav.Link>
+              <Nav.Link 
+                active={activeView === 'folders'} 
+                onClick={() => setActiveView('folders')}
+                className="side-panel-item"
+              >
+                Folders
+              </Nav.Link>
+              <Nav.Link 
+                active={activeView === 'summary'} 
+                onClick={() => setActiveView('summary')}
+                className="side-panel-item"
+              >
+                Summary
+              </Nav.Link>
+            </Nav>
           </div>
-        </Container>
-      </Navbar>
 
-      {showAlert && (
-        <Alert variant="success" className="alert-custom" onClose={() => setShowAlert(false)} dismissible>
-          Link copied to clipboard!
-        </Alert>
-      )}
-
-      <Modal show={showShareModal} onHide={() => setShowShareModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Share Expense Tracker</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>Share this link with your friend to collaborate on expenses:</p>
-          <div className="share-link-container">
-            <input 
-              type="text" 
-              value={shareLink} 
-              readOnly 
-              className="form-control mb-2"
-            />
-            <Button variant="primary" onClick={copyToClipboard}>
-              Copy Link
-            </Button>
-          </div>
-        </Modal.Body>
-      </Modal>
-
-      <div className="main-layout">
-        <div className="side-panel">
-          <Nav className="flex-column">
-            <Nav.Link 
-              active={activeView === 'home'} 
-              onClick={() => setActiveView('home')}
-              className="side-panel-item"
-            >
-              Home
-            </Nav.Link>
-            <Nav.Link 
-              active={activeView === 'folders'} 
-              onClick={() => setActiveView('folders')}
-              className="side-panel-item"
-            >
-              Folders
-            </Nav.Link>
-            <Nav.Link 
-              active={activeView === 'summary'} 
-              onClick={() => setActiveView('summary')}
-              className="side-panel-item"
-            >
-              Summary
-            </Nav.Link>
-          </Nav>
-        </div>
-
-        <div className="main-content">
-          {activeView === 'home' && (
-            <Container>
-              <div className="home-header">
-                <h2 className="mb-4">Welcome to Monthly Expense Tracker</h2>
-                <div className="dashboard-image">
-                  <img 
-                    src="https://img.freepik.com/free-vector/expenses-concept-illustration_114360-5332.jpg" 
-                    alt="Expense Tracker"
-                    className="welcome-image"
-                  />
+          <div className="main-content">
+            {activeView === 'home' && (
+              <Container>
+                <div className="home-header">
+                  <h2 className="mb-4">Welcome to Monthly Expense Tracker</h2>
+                  <div className="dashboard-image">
+                    <img 
+                      src="https://img.freepik.com/free-vector/expenses-concept-illustration_114360-5332.jpg" 
+                      alt="Expense Tracker"
+                      className="welcome-image"
+                    />
+                  </div>
                 </div>
-              </div>
-              <Row>
-                <Col md={6}>
-                  <Card className="mb-4">
-                    <Card.Body>
-                      <Card.Title>Recent Expenses</Card.Title>
-                      <div className="recent-expenses">
-                        {allExpenses.slice(0, 5).map(expense => (
-                          <div key={expense.id} className="expense-item">
-                            <div className="expense-header">
-                              <strong>{expense.title}</strong>
-                              <span className="expense-amount">₹{expense.amount}</span>
+                <Row>
+                  <Col md={6}>
+                    <Card className="mb-4">
+                      <Card.Body>
+                        <Card.Title>Recent Expenses</Card.Title>
+                        <div className="recent-expenses">
+                          {allExpenses.slice(0, 5).map(expense => (
+                            <div key={expense.id} className="expense-item">
+                              <div className="expense-header">
+                                <strong>{expense.title}</strong>
+                                <span className="expense-amount">₹{expense.amount}</span>
+                              </div>
+                              <div className="expense-details">
+                                <span className="badge bg-primary">{expense.category}</span>
+                                <span className="badge bg-info">{expense.folderName}</span>
+                                <span className="expense-date">{new Date(expense.date).toLocaleDateString()}</span>
+                              </div>
                             </div>
-                            <div className="expense-details">
-                              <span className="badge bg-primary">{expense.category}</span>
-                              <span className="badge bg-info">{expense.folderName}</span>
-                              <span className="expense-date">{new Date(expense.date).toLocaleDateString()}</span>
+                          ))}
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                  <Col md={6}>
+                    <Card>
+                      <Card.Body>
+                        <Card.Title>Quick Summary</Card.Title>
+                        <div className="summary-stats">
+                          <div className="stat-item">
+                            <span className="stat-label">Total Expenses:</span>
+                            <span className="stat-value">
+                              ₹{allExpenses.reduce((sum, exp) => sum + exp.amount, 0).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="stat-item">
+                            <span className="stat-label">Categories:</span>
+                            <span className="stat-value">
+                              {new Set(allExpenses.map(exp => exp.category)).size}
+                            </span>
+                          </div>
+                          <div className="stat-item">
+                            <span className="stat-label">Folders:</span>
+                            <span className="stat-value">
+                              {folders.length}
+                            </span>
+                          </div>
+                          <div className="folder-list">
+                            <span className="stat-label">Folder Names:</span>
+                            <div className="folder-names">
+                              {folders.map(folder => (
+                                <span key={folder.id} className="badge bg-secondary me-2">
+                                  {folder.name}
+                                </span>
+                              ))}
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-                <Col md={6}>
-                  <Card>
-                    <Card.Body>
-                      <Card.Title>Quick Summary</Card.Title>
-                      <div className="summary-stats">
-                        <div className="stat-item">
-                          <span className="stat-label">Total Expenses:</span>
-                          <span className="stat-value">
-                            ₹{allExpenses.reduce((sum, exp) => sum + exp.amount, 0).toFixed(2)}
-                          </span>
                         </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Categories:</span>
-                          <span className="stat-value">
-                            {new Set(allExpenses.map(exp => exp.category)).size}
-                          </span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Folders:</span>
-                          <span className="stat-value">
-                            {folders.length}
-                          </span>
-                        </div>
-                        <div className="folder-list">
-                          <span className="stat-label">Folder Names:</span>
-                          <div className="folder-names">
-                            {folders.map(folder => (
-                              <span key={folder.id} className="badge bg-secondary me-2">
-                                {folder.name}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              </Row>
-              <Signature />
-            </Container>
-          )}
-          {activeView === 'folders' && (
-            <>
-              <Folders folders={folders} setFolders={setFolders} onUpdateExpenses={updateAllExpenses} />
-              <Signature />
-            </>
-          )}
-          {activeView === 'summary' && (
-            <>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
+              </Container>
+            )}
+            {activeView === 'folders' && (
+              <Folders 
+                folders={folders} 
+                setFolders={setFolders} 
+                onUpdateExpenses={updateAllExpenses}
+              />
+            )}
+            {activeView === 'summary' && (
               <Summary expenses={allExpenses} folders={folders} />
-              <Signature />
-            </>
-          )}
+            )}
+          </div>
         </div>
+        <Signature />
       </div>
-
-      <footer className="footer mt-auto py-3 bg-light">
-        <Container className="text-center">
-          <span className="text-muted">Made by Bugu for Bugi</span>
-        </Container>
-      </footer>
-    </div>
+    </ErrorBoundary>
   );
 }
 
